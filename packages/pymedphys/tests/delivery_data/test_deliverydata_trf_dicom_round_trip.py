@@ -184,7 +184,16 @@ def test_mudensity_agreement(loaded_dicom_dataset, logfile_delivery_data):
     dicom_mu_density = dicom_delivery_data.mudensity(grid_resolution=5)
     logfile_mu_density = logfile_delivery_data.mudensity(grid_resolution=5)
 
-    diff = logfile_mu_density - dicom_mu_density
+    created_dicom = logfile_delivery_data.to_dicom(loaded_dicom_dataset)
+    created_dicom_mu_density = created_dicom.mudensity(grid_resolution=5)
+
+    compare_mudensity(logfile_mu_density, dicom_mu_density)
+    compare_mudensity(created_dicom_mu_density, logfile_mu_density)
+    compare_mudensity(created_dicom_mu_density, dicom_mu_density)
+
+
+def compare_mudensity(mudensity_eval, mudensity_ref):
+    diff = mudensity_eval - mudensity_ref
     max_diff = np.max(np.abs(diff))
     abs_mean_diff = np.abs(np.mean(diff))
     std_diff = np.std(diff)
@@ -194,21 +203,21 @@ def test_mudensity_agreement(loaded_dicom_dataset, logfile_delivery_data):
         assert abs_mean_diff < 0.1
     except AssertionError:
         max_val = np.max([
-            np.max(logfile_mu_density),
-            np.max(dicom_mu_density)
+            np.max(mudensity_eval),
+            np.max(mudensity_ref)
         ])
 
         plt.figure()
-        plt.pcolormesh(dicom_mu_density, vmin=0, vmax=max_val)
+        plt.pcolormesh(mudensity_eval, vmin=0, vmax=max_val)
         plt.colorbar()
 
         plt.figure()
-        plt.pcolormesh(logfile_mu_density, vmin=0, vmax=max_val)
+        plt.pcolormesh(mudensity_ref, vmin=0, vmax=max_val)
         plt.colorbar()
 
         plt.figure()
         plt.pcolormesh(
-            logfile_mu_density - dicom_mu_density,
+            mudensity_eval - mudensity_ref,
             vmin=-max_diff, vmax=max_diff, cmap='bwr')
         plt.colorbar()
         plt.show()
