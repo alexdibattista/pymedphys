@@ -138,14 +138,12 @@ def test_round_trip_dd2dcm2dd(loaded_dicom_dataset,
         np.around(original.jaw, 2) ==
         np.around(processed.jaw, 2))
 
-    # Collimator not currently handled appropriately
     assert np.all(
         np.around(original.collimator, 2) ==
         np.around(processed.collimator, 2))
 
 
-def test_round_trip_dcm2dd2dcm(loaded_dicom_dataset,
-                               loaded_dicom_gantry_angles):
+def test_round_trip_dcm2dd2dcm(loaded_dicom_dataset):
     original = loaded_dicom_dataset
     delivery_data = Delivery.from_dicom(original, FRACTION_GROUP)
     processed = delivery_data.to_dicom(original)
@@ -188,10 +186,12 @@ def test_mudensity_agreement(loaded_dicom_dataset, logfile_delivery_data):
 
     diff = logfile_mu_density - dicom_mu_density
     max_diff = np.max(np.abs(diff))
+    abs_mean_diff = np.abs(np.mean(diff))
     std_diff = np.std(diff)
     try:
         assert max_diff < 4.1
         assert std_diff < 0.4
+        assert abs_mean_diff < 0.1
     except AssertionError:
         max_val = np.max([
             np.max(logfile_mu_density),
